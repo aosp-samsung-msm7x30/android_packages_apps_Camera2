@@ -82,9 +82,14 @@ public class AppUpgrader extends SettingsUpgrader {
     private static final int CAMERA_SETTINGS_STRINGS_UPGRADE = 5;
 
     /**
+     * With this version, port over max brightness settings.
+     */
+    private static final int CAMERA_SETTINGS_MAX_BRIGHTNESS = 7;
+
+    /**
      * Increment this value whenever new AOSP UpgradeSteps need to be executed.
      */
-    public static final int APP_UPGRADE_VERSION = 6;
+    public static final int APP_UPGRADE_VERSION = 7;
 
     private final AppController mAppController;
 
@@ -151,6 +156,10 @@ public class AppUpgrader extends SettingsUpgrader {
 
         if (lastVersion < CAMERA_SETTINGS_SELECTED_MODULE_INDEX) {
             upgradeSelectedModeIndex(settingsManager, context);
+        }
+
+        if (lastVersion < CAMERA_SETTINGS_MAX_BRIGHTNESS) {
+            upgradeMaxBrightness(settingsManager);
         }
     }
 
@@ -421,6 +430,18 @@ public class AppUpgrader extends SettingsUpgrader {
                             + module.getModuleStringIdentifier());
 
             copyPreferences(oldModulePreferences, newModulePreferences);
+        }
+    }
+
+    private void upgradeMaxBrightness(SettingsManager settingsManager) {
+        SharedPreferences oldGlobalPreferences =
+                settingsManager.openPreferences(OLD_GLOBAL_PREFERENCES_FILENAME);
+        if (oldGlobalPreferences.contains(Keys.KEY_MAX_BRIGHTNESS)) {
+            String maxBrightness = removeString(oldGlobalPreferences, Keys.KEY_MAX_BRIGHTNESS);
+            if (OLD_SETTINGS_VALUE_ON.equals(maxBrightness)) {
+                settingsManager.set(SettingsManager.SCOPE_GLOBAL, Keys.KEY_MAX_BRIGHTNESS,
+                        true);
+            }
         }
     }
 
